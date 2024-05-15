@@ -3,7 +3,7 @@ A self-hosted Dynamic DNS server with an accompanying client.
 
 ## ToDo:
 - [ ] MVP of the server
-	- [ ] Can read the config file
+	- [x] Can read the config file
     - [x] Can receive updates from a client
     - [ ] Can write updates to a local database
     - [ ] Can send API queries to a DNS server to update an A record
@@ -24,6 +24,7 @@ A self-hosted Dynamic DNS server with an accompanying client.
     - [ ] Can talk to additional DNS providers
         - [ ] Cloudflare
         - [ ] \[...\]
+    - [ ] Dockerize the server
 
 - [ ] Add user documentation
     - [ ] Installation
@@ -56,6 +57,9 @@ ToDo
 ToDo
 
 ### Server
+#### Linux
+ToDo
+#### Docker
 ToDo
 
 ### API
