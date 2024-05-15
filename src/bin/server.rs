@@ -22,6 +22,13 @@ struct Config {
     lifetime: String
 }
 
+#[derive(Debug, Deserialize)]
+struct Database {
+    address: String,
+    port: u16,
+    username: String,
+    password: String
+}
 
 fn read_config() -> Settings {
     let file_path = "./server_config.toml";
@@ -46,10 +53,11 @@ fn read_config() -> Settings {
     data
 }
 
-let request_re = Regex::new(r".*\s/(\S*)\s.*").unwrap();
-let client_address_re = Regex::new(r".*:\s(.*):.*").unwrap();
 
 fn handle_connection(mut stream: TcpStream) {
+    let _request_re = Regex::new(r".*\s/(\S*)\s.*").unwrap();
+    let _client_address_re = Regex::new(r".*:\s(.*):.*").unwrap();
+
     let buf_reader = BufReader::new(&mut stream);
 
     let mut request_lines = Vec::new();
