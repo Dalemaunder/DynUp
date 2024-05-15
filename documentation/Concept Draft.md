@@ -9,7 +9,7 @@ Initially talk to CloudFlare or local DNS (BIND?) for the updates (both?),
 
 People have mentioned [RFC2136](https://datatracker.ietf.org/doc/html/rfc2136) is relevant for BIND.
 
-### Basic Components
+### Core Components
 #### Client
 For when the router doesn't support custom DDNS servers. Sends a small authentication hello packet to the server,
 #### Server
