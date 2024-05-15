@@ -1,0 +1,11 @@
+[client]
+# How frequently the client will send updates
+update_interval = 30
+# Authentication password. The server matches the hash of this password to the A record that needs updating.
+password = "Abcd1234!"
+
+[server]
+# IP address, hostname, or domain name to send updates to.
+address = "127.0.0.1"
+# Change the port being sent to from the default.
+port = 7878

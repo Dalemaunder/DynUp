@@ -15,15 +15,15 @@ struct Settings {
 #[derive(Debug, Deserialize)]
 struct Config {
     address: String,
-    listen_port: String,
-    _data_store: String,
-    _users: String,
-    _lifetime: String
+    listen_port: u16,
+    data_store: String,
+    users: String,
+    lifetime: String
 }
 
 
 fn read_config() -> Settings {
-    let file_path = "/home/dwm/.config/DynUp/config.toml";
+    let file_path = "./server_config.toml";
 
     let contents = match std::fs::read_to_string(file_path) {
         Ok(c) => c,
@@ -58,6 +58,8 @@ fn handle_connection(mut stream: TcpStream) {
 
     let request_line = buf_reader.lines().next().unwrap().unwrap();
 
+    println!("{:#?}", &request_line);
+
     match request_line.as_str() {
         "HEAD / HTTP/1.1" => {
             let response = "HTTP/1.1 200 OK\r\n\r\n";
@@ -76,6 +78,7 @@ fn handle_connection(mut stream: TcpStream) {
 fn main() {
     let settings = read_config();
     let socket = format!("{}:{}", settings.server.address, settings.server.listen_port);
+    //let socket = format!("{}:{}", "127.0.0.1", "7878");
     let listener = TcpListener::bind(socket).unwrap();
 
     for stream in listener.incoming() {
