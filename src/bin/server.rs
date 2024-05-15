@@ -5,6 +5,7 @@ use std::{
     process::exit,
 };
 use serde_derive::Deserialize;
+use regex::Regex;
 
 
 #[derive(Debug, Deserialize)]
@@ -45,27 +46,40 @@ fn read_config() -> Settings {
     data
 }
 
+let request_re = Regex::new(r".*\s/(\S*)\s.*").unwrap();
+let client_address_re = Regex::new(r".*:\s(.*):.*").unwrap();
 
 fn handle_connection(mut stream: TcpStream) {
     let buf_reader = BufReader::new(&mut stream);
-    //let http_request: Vec<_> = buf_reader
-    //    .lines()
-    //    .map(|result| result.unwrap())
-    //    .take_while(|line| !line.is_empty())
-    //    .collect();
-    //
-    //println!("Request: {:#?}", http_request);
 
-    let request_line = buf_reader.lines().next().unwrap().unwrap();
+    let mut request_lines = Vec::new();
+    for line in buf_reader.lines() {
+        let contents = line.unwrap();
+        if contents.is_empty() {
+            break;
+        } else {
+            request_lines.push(contents);
+        }
+    }
 
-    println!("{:#?}", &request_line);
+    //for value in &request_lines {
+    //    println!("{:#?}", value);
+    //}
 
-    match request_line.as_str() {
-        "HEAD / HTTP/1.1" => {
+    //println!("{:#?}", &request_line);
+    let request = request_lines[0].as_str();
+    let client_address = request_lines[4].as_str();
+
+    match request {
+        "PATCH / HTTP/1.1" => {
+            println!("{:#?}", request);
+            println!("{:#?}", client_address);
             let response = "HTTP/1.1 200 OK\r\n\r\n";
             stream.write_all(response.as_bytes()).unwrap();
         },
         _ => {
+            println!("{:#?}", request);
+            println!("{:#?}", client_address);
             let response = "HTTP/1.1 405 No\r\n\r\n";
             stream.write_all(response.as_bytes()).unwrap();
         }
