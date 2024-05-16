@@ -31,7 +31,7 @@ struct Database {
 }
 
 fn read_config() -> Settings {
-    let file_path = "./server_config.toml";
+    let file_path = "./config/server_config.toml";
 
     let contents = match std::fs::read_to_string(file_path) {
         Ok(c) => c,

@@ -26,7 +26,7 @@ struct Server {
 }
 
 fn read_config() -> Settings {
-    let file_path = "./client_config.toml";
+    let file_path = "./config/client_config.toml";
 
     let contents = match std::fs::read_to_string(file_path) {
         Ok(c) => c,
