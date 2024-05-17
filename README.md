@@ -11,6 +11,7 @@ A self-hosted Dynamic DNS server with an accompanying client.
 - [ ] MVP of the server
 	- [x] Can read the config file
     - [x] Can receive updates from a client
+    - [x] Can parse the updates
     - [ ] Can write updates to a local database
         - [ ] SQLite
     - [ ] Can send API queries to a DNS server to update an A record
@@ -26,9 +27,11 @@ A self-hosted Dynamic DNS server with an accompanying client.
 - [ ] Add features to server
     - [x] Can send basic response codes to client
         - [x] 200 OK
+        - [x] 
         - [x] 405 No
     - [ ] Can send advanced response codes to client
     - [ ] Can perform database cleanups based on the configured lifetime setting
+    - [ ] Can validate hello requests
     - [ ] Can receive updates from other routers
         - [ ] Cisco IOS
     - [ ] Can talk to additional DNS providers
@@ -54,6 +57,7 @@ A self-hosted Dynamic DNS server with an accompanying client.
 - [ ] Add features to client
     - [ ] Basic logs
     - [ ] Advanced logs
+    - [ ] Can authenticate hello packets with the server
 
 - [ ] MVP of the TUI frontend
     - [ ] Can update the config file
