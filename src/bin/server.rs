@@ -3,9 +3,12 @@ use std::{
     io::{prelude::*, BufReader},
     net::{TcpListener, TcpStream},
     process::exit,
+    time::{Duration, SystemTime, UNIX_EPOCH},
 };
 use serde_derive::Deserialize;
 use regex::Regex;
+use itertools::Itertools;
+use lazy_static::lazy_static;
 
 
 
@@ -32,7 +35,8 @@ struct Database {
     address: String,
     port: u16,
     username: String,
-    password: String
+    password: String,
+    authenticate: bool,
 }
 
 
@@ -66,13 +70,57 @@ fn read_config() -> Settings {
 }
 
 
-fn handle_hello (client_auth: &str, client_IP: &str) {
-    println!("{}", client_auth);
-    println!("{}", client_IP);
+// Skeleton
+fn db_add_new_entry() {
+
 }
 
 
-fn handle_connection(mut stream: TcpStream, request_re: &regex::Regex, client_address_re: &regex::Regex) {
+// Skeleton
+fn db_update_entry() {
+
+}
+
+
+// Skeleton
+fn db_handle_entry (hash: &str, salt: &str, client_IP: &str, current_time: Duration) {
+    // SQLite connection here
+
+    // Query the records table for the hash
+    // If it doesn't exist:
+    db_add_new_entry();
+    // If it does exist:
+    db_update_entry();
+}
+
+
+fn handle_hello (client_auth: &str, client_IP: &str) {
+    // Split the client_auth string into a named tuple. This was surprisingly annoying to do.
+    let (hash, salt) = client_auth
+        .split("/")                 // Split on the delimiting slash,
+        .collect::<Vec<&str>>()     // Collect the halves into a Vector,
+        .into_iter()                // Turn the Vector into an iterator,
+        .collect_tuple()            // Turn the iterator into a tuple,
+        .unwrap();                  // Unpack the tuple from the Option<(String,String)>.
+
+    println!("{}", hash);
+    println!("{}", salt);
+    println!("{}", client_IP);
+    
+    let current_time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap();
+
+    println!("{:#?}", current_time);
+
+    db_handle_entry(hash, salt, client_IP, current_time);
+
+}
+
+
+// Regexes for parsing requests inside handle_connection().
+lazy_static! { static ref REQUEST_RE: regex::Regex = Regex::new(r"(.*)\s/(\S*)\s.*").unwrap(); }
+lazy_static! { static ref CLIENT_ADDRESS_RE: regex::Regex = Regex::new(r".*:\s(.*):.*").unwrap(); }
+
+fn handle_connection(mut stream: TcpStream) {
     let buf_reader = BufReader::new(&mut stream);
 
     // Load the contents of the request into a vec for easy access.
@@ -87,14 +135,15 @@ fn handle_connection(mut stream: TcpStream, request_re: &regex::Regex, client_ad
         }
     }
 
+    println!("{:#?}", &request_lines);
     let request = request_lines[0].as_str();
     // Capture 1 should be the HTTP method, capture 2 should be the URI.
-    let request_components = request_re.captures(&request).unwrap();
+    let request_components = REQUEST_RE.captures(&request).unwrap();
 
 
-    let socket = request_lines[4].as_str();
+    let socket = request_lines[1].as_str();
     // The only capture should be the client's IP address.
-    let socket_components = client_address_re.captures(&socket).unwrap();
+    let socket_components = CLIENT_ADDRESS_RE.captures(&socket).unwrap();
 
 
     // Match the method type from the connection.
@@ -132,14 +181,11 @@ fn main() {
     let listener = TcpListener::bind(socket).unwrap();
 
 
-    let request_re = Regex::new(r"(.*)\s/(\S*)\s.*").unwrap();
-    let client_address_re = Regex::new(r".*:\s(.*):.*").unwrap();
-
     for stream in listener.incoming() {
         // TODO: Add error handling here.
         let stream = stream.unwrap();
 
-        handle_connection(stream, &request_re, &client_address_re);
+        handle_connection(stream);
     }
 }
 

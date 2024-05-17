@@ -2,6 +2,9 @@
 use std::process::exit;
 use serde_derive::Deserialize;
 use ureq::Response;
+//use rand::distributions::{Alphanumeric, DistString};
+use std::{thread, time::Duration};
+
 
 
 // Parent struct for the client and server settings
@@ -14,8 +17,9 @@ struct Settings {
 // Struct which holds the client-specific settings
 #[derive(Debug, Deserialize)]
 struct Client {
-    update_interval: u16,
+    update_interval: u64,
     password: String,
+    salt: String,
 }
 
 // Struct which holds the server-specific settings
@@ -24,6 +28,17 @@ struct Server {
     address: String,
     port: u16,
 }
+
+
+
+fn generate_hash(_password: String, salt: String) -> (String, String){
+    //let salt = Alphanumeric.sample_string(&mut rand::thread_rng(), 16);
+    // Generate the hash here using Argon2id.
+
+    // Returning a dummy string along with the salt for testing.
+    ("this-is-not-hashed-yet".to_string(), salt)
+}
+
 
 fn read_config() -> Settings {
     let file_path = "./config/client_config.toml";
@@ -49,28 +64,44 @@ fn read_config() -> Settings {
     data
 }
 
+
 fn main () -> Result<(), ureq::Error> {
     // Load the config file
     let settings = read_config();
 
-    // Form the socket using the paramaters from the config file
-    let socket = format!("http://{}:{}", settings.server.address, settings.server.port);
-    
-    // Fire off a head request
-    let head: Response = ureq::head(&socket)
-        .call()?;
-        //.into_string()?;
+    // Generate the password hash
+    let (password_hash, password_salt) = generate_hash(settings.client.password, settings.client.salt);
 
-    // Debug print
-    println!("{:#?}", head);
-    
-    match head.status() {
-        200 => {
-            println!("Request success");
-        },
-        _ => {
-            println!("Request fail");
-        },
+    // Form the socket using the paramaters from the config file
+    let socket = format!("http://{}:{}/{}/{}", settings.server.address, settings.server.port, password_hash, password_salt);
+
+    // Build a new duration out of the interval time from the config file
+    // Used for the thread::sleep() in the core loop
+    let interval = Duration::new(settings.client.update_interval, 0);
+
+
+    // Core loop that sends a new packet in increments specified in the config file.
+    loop {
+        // Fire off a head request
+        let patch: Response = ureq::patch(&socket)
+            .call()?;
+            //.into_string()?;
+
+        // Debug print
+        println!("{:#?}", patch);
+        
+        // Debug outputs currently. Convert to logging later.
+        match patch.status() {
+            200 => {
+                println!("Request success");
+            },
+            _ => {
+                println!("Request fail");
+                break;
+            },
+        }    
+
+        thread::sleep(interval);
     }
 
     Ok(())

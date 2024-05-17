@@ -6,11 +6,15 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-toml = "0.8"
+itertools = "0.13"
+lazy_static = "1.4"
+regex = "1.10"
+rand = "0.8"
 serde = "1"
 serde_derive = "1"
+sqlite = "0.36"
+toml = "0.8"
 ureq = "2.9"
-regex = "1.10"
 
 [[bin]]
 name = "server"
