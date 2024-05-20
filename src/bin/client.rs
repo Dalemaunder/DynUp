@@ -1,10 +1,16 @@
 #![allow(non_snake_case)]
+use argon2::{
+    password_hash::{
+        rand_core::OsRng,
+        PasswordHasher, SaltString
+    },
+    Argon2};
 use std::process::exit;
 use serde_derive::Deserialize;
 use ureq::Response;
-//use rand::distributions::{Alphanumeric, DistString};
-use std::{thread, time::Duration};
-
+use std::{thread, time::Duration, str};
+//use base64::{engine::general_purpose::URL_SAFE, write::EncoderWriter};
+use base64::{encode};
 
 
 // Parent struct for the client and server settings
@@ -31,12 +37,21 @@ struct Server {
 
 
 
-fn generate_hash(_password: String, salt: String) -> (String, String){
-    //let salt = Alphanumeric.sample_string(&mut rand::thread_rng(), 16);
+fn generate_hash(password: String) -> String{
     // Generate the hash here using Argon2id.
+    let salt = SaltString::generate(&mut OsRng);
+    let argon2 = Argon2::default();
+    let hash = argon2.hash_password(password.as_bytes(), &salt).unwrap().to_string();
+    println!("{}", &hash);
+    hash
 
     // Returning a dummy string along with the salt for testing.
-    ("this-is-not-hashed-yet".to_string(), salt)
+    //("this-is-not-hashed-yet".to_string(), salt)
+}
+
+fn encode_string(input: String) -> String {
+    let encoding = encode(input);
+    encoding
 }
 
 
@@ -70,10 +85,11 @@ fn main () -> Result<(), ureq::Error> {
     let settings = read_config();
 
     // Generate the password hash
-    let (password_hash, password_salt) = generate_hash(settings.client.password, settings.client.salt);
+    let password_hash = generate_hash(settings.client.password);
+    let encoded_hash = encode_string(password_hash);
 
     // Form the socket using the paramaters from the config file
-    let socket = format!("http://{}:{}/{}/{}", settings.server.address, settings.server.port, password_hash, password_salt);
+    let socket = format!("http://{}:{}/{}", settings.server.address, settings.server.port, encoded_hash);
 
     // Build a new duration out of the interval time from the config file
     // Used for the thread::sleep() in the core loop

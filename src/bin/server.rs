@@ -1,15 +1,20 @@
 #![allow(non_snake_case)]
+
+// Public Imports
 use std::{
-    io::{prelude::*, BufReader},
-    net::{TcpListener, TcpStream},
+    io::{prelude::*},
+    net::TcpListener,
     process::exit,
-    time::{Duration, SystemTime, UNIX_EPOCH},
 };
 use serde_derive::Deserialize;
-use regex::Regex;
-use itertools::Itertools;
-use lazy_static::lazy_static;
 
+
+// Module declaration/Private Imports
+mod db_access;
+mod dns_bindings;
+mod http_server;
+//use dns_bindings::ProviderType;
+use http_server::RequestStatus;
 
 
 // Parent struct. Required by Serde.
@@ -57,7 +62,7 @@ fn read_config() -> Settings {
 
     // Parse the config contents into the relevant structs.
     // TODO: Make the error handling here better.
-    let data: Settings = match toml::from_str(&contents) {
+    let settings: Settings = match toml::from_str(&contents) {
         Ok(d) => d,
         Err(_) => {
 
@@ -66,109 +71,7 @@ fn read_config() -> Settings {
             exit(1);
         }
     };
-    data
-}
-
-
-// Skeleton
-fn db_add_new_entry() {
-
-}
-
-
-// Skeleton
-fn db_update_entry() {
-
-}
-
-
-// Skeleton
-fn db_handle_entry (hash: &str, salt: &str, client_IP: &str, current_time: Duration) {
-    // SQLite connection here
-
-    // Query the records table for the hash
-    // If it doesn't exist:
-    db_add_new_entry();
-    // If it does exist:
-    db_update_entry();
-}
-
-
-fn handle_hello (client_auth: &str, client_IP: &str) {
-    // Split the client_auth string into a named tuple. This was surprisingly annoying to do.
-    let (hash, salt) = client_auth
-        .split("/")                 // Split on the delimiting slash,
-        .collect::<Vec<&str>>()     // Collect the halves into a Vector,
-        .into_iter()                // Turn the Vector into an iterator,
-        .collect_tuple()            // Turn the iterator into a tuple,
-        .unwrap();                  // Unpack the tuple from the Option<(String,String)>.
-
-    println!("{}", hash);
-    println!("{}", salt);
-    println!("{}", client_IP);
-    
-    let current_time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap();
-
-    println!("{:#?}", current_time);
-
-    db_handle_entry(hash, salt, client_IP, current_time);
-
-}
-
-
-// Regexes for parsing requests inside handle_connection().
-lazy_static! { static ref REQUEST_RE: regex::Regex = Regex::new(r"(.*)\s/(\S*)\s.*").unwrap(); }
-lazy_static! { static ref CLIENT_ADDRESS_RE: regex::Regex = Regex::new(r".*:\s(.*):.*").unwrap(); }
-
-fn handle_connection(mut stream: TcpStream) {
-    let buf_reader = BufReader::new(&mut stream);
-
-    // Load the contents of the request into a vec for easy access.
-    // This entire function can definitely be optimised once the MVP is working.
-    let mut request_lines = Vec::new();
-    for line in buf_reader.lines() {
-        let contents = line.unwrap();
-        if contents.is_empty() {
-            break;
-        } else {
-            request_lines.push(contents);
-        }
-    }
-
-    println!("{:#?}", &request_lines);
-    let request = request_lines[0].as_str();
-    // Capture 1 should be the HTTP method, capture 2 should be the URI.
-    let request_components = REQUEST_RE.captures(&request).unwrap();
-
-
-    let socket = request_lines[1].as_str();
-    // The only capture should be the client's IP address.
-    let socket_components = CLIENT_ADDRESS_RE.captures(&socket).unwrap();
-
-
-    // Match the method type from the connection.
-    match &request_components[1] {
-        "PATCH" => {
-            // TODO: Add error handling here.
-            handle_hello(&request_components[2], &socket_components[1]);
-            // Only respond with the 200 code after the hello handling has passed.
-            let response = "HTTP/1.1 200 OK\r\n\r\n";
-            stream.write_all(response.as_bytes()).unwrap();
-        },
-        "GET" => {
-            // Respond with a 204 code for connection testing purposes.
-            // URI is completely ignored.
-            let response = "HTTP/1.1 204 Empty\r\n\r\n";
-            stream.write_all(response.as_bytes()).unwrap();
-        },
-        _ => {
-            // Deny all other request methods.
-            let response = "HTTP/1.1 405 No\r\n\r\n";
-            stream.write_all(response.as_bytes()).unwrap();
-        }
-    }
-
-
+    settings
 }
 
 
@@ -180,12 +83,52 @@ fn main() {
     let socket = format!("{}:{}", settings.server.address, settings.server.listen_port);
     let listener = TcpListener::bind(socket).unwrap();
 
+    let db_connection = sqlite::open(":memory:").unwrap();
+
 
     for stream in listener.incoming() {
         // TODO: Add error handling here.
-        let stream = stream.unwrap();
+        let mut stream = stream.unwrap();
 
-        handle_connection(stream);
+        //(request_components, socket_components) = http_server::parse_connection(&stream);
+        let (request_method, request_URI, client_IP) = http_server::parse_connection(&stream);
+
+        println!("Method: {}", &request_method);
+        println!("Method: {}", &request_URI);
+        println!("Method: {}", &client_IP);
+        // Match the method type from the connection.
+        match request_method.as_str() {
+            "PATCH" => {
+                // TODO: Add error handling here.
+                let request_status = http_server::parse_hello(&db_connection, request_URI, client_IP);
+                let mut response = ""; 
+                match request_status {
+                    RequestStatus::Invalid => {
+                        response = "HTTP/1.1 401 Unauthorized\r\n\r\n";
+                    },
+                    RequestStatus::New => {
+                        response = "HTTP/1.1 201 Created\r\n\r\n";
+                    },
+                    RequestStatus::OutOfDate => {
+                        response = "HTTP/1.1 200 Updated\r\n\r\n";
+                    },
+                    RequestStatus::Current => {
+                        response = "HTTP/1.1 200 OK\r\n\r\n";
+                    },
+                }
+                stream.write_all(response.as_bytes()).unwrap();
+            },
+            "GET" => {
+                // Respond with a 204 code for connection testing purposes.
+                // URI is completely ignored.
+                let response = "HTTP/1.1 204 Empty\r\n\r\n";
+                stream.write_all(response.as_bytes()).unwrap();
+            },
+            _ => {
+                // Deny all other request methods.
+                let response = "HTTP/1.1 405 No\r\n\r\n";
+                stream.write_all(response.as_bytes()).unwrap();
+            }
+        }
     }
 }
-

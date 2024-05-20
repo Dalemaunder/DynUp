@@ -6,6 +6,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+argon2 = "0.5"
+base64 = "0.22"
 itertools = "0.13"
 lazy_static = "1.4"
 regex = "1.10"
@@ -18,8 +20,8 @@ ureq = "2.9"
 
 [[bin]]
 name = "server"
-path = "src/bin/server.rs"
+#path = "src/bin/server.rs"
 
 [[bin]]
 name = "client"
-path = "src/bin/client.rs"
+#path = "src/bin/client.rs"
