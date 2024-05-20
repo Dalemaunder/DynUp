@@ -1,0 +1,11 @@
+[server]
+# Configure the address the server monitors on.
+address = "127.0.0.1"
+# Set the port to something different.
+listen_port = 7878
+# Location to store the SQL database.
+data_store = "/location/for/database"
+# Location to find the list of pre-configured clients.
+users = "/location/of/user/list"
+# How long to keep entries before being purged.
+lifetime = "1d"
