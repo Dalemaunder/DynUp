@@ -25,3 +25,6 @@ name = "server"
 [[bin]]
 name = "client"
 #path = "src/bin/client.rs"
+
+#[lib]
+#name = "db_access"

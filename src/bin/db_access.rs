@@ -1,11 +1,40 @@
 use sqlite::Connection;
 
-pub fn establish_db_connection() {}
-pub fn instantiate_db() {}
+pub fn establish_db_connection() {
+    
+}
+pub fn instantiate_db(db_connection: &Connection) {
+    let table_query = "
+        CREATE TABLE client (
+            hash text,
+            a_record text,
+            dns_provider text,
+            PRIMARY KEY (hash)
+       );
+       
+        CREATE TABLE record (
+            hash text,
+            last_checkin integer,
+            address text,
+            PRIMARY KEY (hash)
+      );
+    ";
 
-pub fn validate_client(_db_connection: &Connection, _hash: &str) -> bool {
-    // Add a SQL query here to check the clients table for the hash. If the hash doesn't exist,
-    // return false
+    let client_query = "
+        INSERT INTO clients VALUES (
+            '$argon2id$v=19$m=19456,t=2,p=1$ZIB6AlG40RKe1s52Ygan5w$Ut+EM978QdWuVWUicHxrPOhIB4/hzfZoc4SwL3o8zzg',
+            'test.maunder.tech',
+            'BIND'
+            );
+        ";
+
+    db_connection.execute(table_query).unwrap();
+    db_connection.execute(client_query).unwrap();
+    println!("DB queries have been run.");
+}
+
+pub fn validate_client(_db_connection: &Connection, hash: &str) -> bool {
+    let query = format!("SELECT hash FROM client WHERE hash = '{}';", hash);
     true
 }
 pub fn validate_exists(_db_connection: &Connection, _hash: &str, client_IP: &str) -> bool {true}

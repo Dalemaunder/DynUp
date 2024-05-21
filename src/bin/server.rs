@@ -1,8 +1,9 @@
 #![allow(non_snake_case)]
+#![warn(dead_code)]
 
 // Public Imports
 use std::{
-    io::{prelude::*},
+    io::prelude::*,
     net::TcpListener,
     process::exit,
 };
@@ -85,6 +86,8 @@ fn main() {
 
     let db_connection = sqlite::open(":memory:").unwrap();
 
+    db_access::instantiate_db(&db_connection);
+
 
     for stream in listener.incoming() {
         // TODO: Add error handling here.
@@ -101,7 +104,7 @@ fn main() {
             "PATCH" => {
                 // TODO: Add error handling here.
                 let request_status = http_server::parse_hello(&db_connection, request_URI, client_IP);
-                let mut response = ""; 
+                let response; 
                 match request_status {
                     RequestStatus::Invalid => {
                         response = "HTTP/1.1 401 Unauthorized\r\n\r\n";
