@@ -19,17 +19,18 @@ A self-hosted Dynamic DNS server with an accompanying client.
 
 - [ ] MVP of the client
     - [x] Can read the config file
-    - [x] Can send updates to a server
+    - [x] Can send updates to the server
     - [ ] Can pass data to the server
         - [ ] Hostname
-        - [ ] Hashed auth string
+        - [x] Hashed auth string
 
 - [ ] Add features to server
     - [x] Can send basic response codes to client
         - [x] 200 OK
-        - [x] 
-        - [x] 405 No
-    - [ ] Can send advanced response codes to client
+    - [x] Can send advanced response codes to client
+        - [x] 200 Updated
+        - [x] 201 Created
+        - [x] 401 Unauthorized
     - [ ] Can perform database cleanups based on the configured lifetime setting
     - [ ] Can validate hello requests
     - [ ] Can receive updates from other routers
