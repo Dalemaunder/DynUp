@@ -21,7 +21,7 @@ pub fn instantiate_db(db_connection: &Connection) {
     ";
 
     let client_query = "
-        INSERT INTO clients VALUES (
+        INSERT INTO client VALUES (
             '$argon2id$v=19$m=19456,t=2,p=1$ZIB6AlG40RKe1s52Ygan5w$Ut+EM978QdWuVWUicHxrPOhIB4/hzfZoc4SwL3o8zzg',
             'test.maunder.tech',
             'BIND'
@@ -33,8 +33,25 @@ pub fn instantiate_db(db_connection: &Connection) {
     println!("DB queries have been run.");
 }
 
-pub fn validate_client(_db_connection: &Connection, hash: &str) -> bool {
-    let query = format!("SELECT hash FROM client WHERE hash = '{}';", hash);
+pub fn validate_client(db_connection: &Connection, hash: &str) -> bool {
+    //let query = format!("SELECT 1 FROM client WHERE hash = '{}';", &hash);
+    let query = format!("SELECT * FROM client;");
+    db_connection.iterate(query, |pairs| {
+        println!("Iterator entered");
+        for &(name, value) in pairs.iter() {
+            println!("{} = {}", name, value.unwrap());
+        }
+        true
+    })
+    .unwrap();
+    //println!("DB Result: {:#?}", result);
+    //match result {
+    //    "1" => {
+    //        println!("Client found");
+    //        true
+    //    },
+    //    _ => false
+    //}
     true
 }
 pub fn validate_exists(_db_connection: &Connection, _hash: &str, client_IP: &str) -> bool {true}
