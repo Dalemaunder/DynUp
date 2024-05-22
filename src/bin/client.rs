@@ -1,4 +1,5 @@
 #![allow(non_snake_case)]
+#![allow(deprecated)]
 use argon2::{
     password_hash::{
         rand_core::OsRng,
@@ -10,7 +11,7 @@ use serde_derive::Deserialize;
 use ureq::Response;
 use std::{thread, time::Duration, str};
 //use base64::{engine::general_purpose::URL_SAFE, write::EncoderWriter};
-use base64::{encode};
+use base64::encode;
 
 
 // Parent struct for the client and server settings
@@ -25,7 +26,8 @@ struct Settings {
 struct Client {
     update_interval: u64,
     password: String,
-    salt: String,
+    a_record: String,
+    DNS_provider: String,
 }
 
 // Struct which holds the server-specific settings
@@ -88,26 +90,46 @@ fn main () -> Result<(), ureq::Error> {
     let password_hash = generate_hash(settings.client.password);
     let encoded_hash = encode_string(password_hash);
 
-    // Form the socket using the paramaters from the config file
-    let socket = format!("http://{}:{}/{}", settings.server.address, settings.server.port, encoded_hash);
+    let encoded_a_record = encode_string(settings.client.a_record);
+    let encoded_provider = encode_string(settings.client.DNS_provider);
 
     // Build a new duration out of the interval time from the config file
     // Used for the thread::sleep() in the core loop
     let interval = Duration::new(settings.client.update_interval, 0);
 
+    // Form the socket using the paramaters from the config file
+    // First assignment is for the registration packet.
+    let mut socket = format!("http://{}:{}/{}/{}/{}", settings.server.address, settings.server.port, encoded_hash, encoded_a_record, encoded_provider);
+
+    // Send out the register packet and action the response.
+    let register: Response = ureq::put(&socket)
+        .call()?;
+
+    match register.status() {
+        201 => {
+            println!("Client successfully added to the server");
+        },
+        _ => {
+            println!("Client registration has failed");
+            exit(1);
+        }
+    }
+
+    // Re-assign the socket for hello packets.
+    socket = format!("http://{}:{}/{}", settings.server.address, settings.server.port, encoded_hash);
 
     // Core loop that sends a new packet in increments specified in the config file.
     loop {
         // Fire off a head request
-        let patch: Response = ureq::patch(&socket)
+        let hello: Response = ureq::patch(&socket)
             .call()?;
             //.into_string()?;
 
         // Debug print
-        println!("{:#?}", patch);
+        println!("{:#?}", hello);
         
         // Debug outputs currently. Convert to logging later.
-        match patch.status() {
+        match hello.status() {
             200 => {
                 println!("Request success");
             },

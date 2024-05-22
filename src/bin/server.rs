@@ -109,14 +109,28 @@ fn main() {
                     RequestStatus::Invalid => {
                         response = "HTTP/1.1 401 Unauthorized\r\n\r\n";
                     },
-                    RequestStatus::New => {
-                        response = "HTTP/1.1 201 Created\r\n\r\n";
-                    },
                     RequestStatus::OutOfDate => {
                         response = "HTTP/1.1 200 Updated\r\n\r\n";
                     },
                     RequestStatus::Current => {
                         response = "HTTP/1.1 200 OK\r\n\r\n";
+                    },
+                    _ => {
+                        response = "HTTP/1.1 400 Bad Request\r\n\r\n";
+                    },
+
+                }
+                stream.write_all(response.as_bytes()).unwrap();
+            },
+            "PUT" => {
+                let request_status = http_server::parse_registration(&db_connection, request_URI, client_IP);
+                let response;
+                match request_status {
+                    RequestStatus::New => {
+                        response = "HTTP/1.1 201 Created\r\n\r\n";
+                    },
+                    _ => {
+                        response = "HTTP/1.1 400 Bad Request\r\n\r\n";
                     },
                 }
                 stream.write_all(response.as_bytes()).unwrap();

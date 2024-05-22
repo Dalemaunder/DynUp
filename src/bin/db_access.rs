@@ -20,18 +20,19 @@ pub fn instantiate_db(db_connection: &Connection) {
       );
     ";
 
-    let client_query = "
-        INSERT INTO client VALUES (
-            '$argon2id$v=19$m=19456,t=2,p=1$ZIB6AlG40RKe1s52Ygan5w$Ut+EM978QdWuVWUicHxrPOhIB4/hzfZoc4SwL3o8zzg',
-            'test.maunder.tech',
-            'BIND'
-            );
-        ";
+    //let client_query = "
+    //   INSERT INTO client VALUES (
+    //       '$argon2id$v=19$m=19456,t=2,p=1$ZIB6AlG40RKe1s52Ygan5w$Ut+EM978QdWuVWUicHxrPOhIB4/hzfZoc4SwL3o8zzg',
+    //       'test.maunder.tech',
+    //       'BIND'
+    //       );
+    //   ";
 
     db_connection.execute(table_query).unwrap();
-    db_connection.execute(client_query).unwrap();
+    //db_connection.execute(client_query).unwrap();
     println!("DB queries have been run.");
 }
+
 
 pub fn validate_client(db_connection: &Connection, hash: &str) -> bool {
     //let query = format!("SELECT 1 FROM client WHERE hash = '{}';", &hash);
@@ -62,7 +63,10 @@ pub fn validate_current(_db_connection: &Connection, hash: &str, client_IP: &str
     false
 }
 
-pub fn add_client(_db_connection: &Connection, hash: &str) {}
+pub fn add_client(db_connection: &Connection, hash: &str, a_record: &str, dns_provider: &str) {
+    let add_client_query = format!("INSERT INTO client VALUES ('{}', '{}', '{}');", &hash, &a_record, &dns_provider);
+    db_connection.execute(add_client_query).unwrap();
+}
 pub fn remove_client(_db_connection: &Connection, hash: &str) {}
 
 pub fn add_record() {}

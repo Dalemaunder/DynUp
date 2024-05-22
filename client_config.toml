@@ -3,8 +3,8 @@
 update_interval = 30
 # Authentication password. The server matches the hash of this password to the A record that needs updating.
 password = "Abcd1234!"
-# Salt for the hashing process.
-salt = "TheQuickBrownFox"
+a_record = "test.maunder.tech"
+DNS_provider = "BIND"
 
 [server]
 # IP address, hostname, or domain name to send updates to.

@@ -17,6 +17,24 @@ pub enum RequestStatus {
     Current,
 }
 
+pub fn parse_registration(db_connection: &Connection, client_registration: String, client_IP: String) -> RequestStatus {
+    // Split the URI into its constituent parts: hash, a record, DNS provider name
+    let registration_parts = client_registration.split("/").collect::<Vec<&str>>();
+    // Decode each part from Base64
+    let decoded_hash = decode(registration_parts[0]).unwrap();
+    let decoded_a_record = decode(registration_parts[1]).unwrap();
+    let decoded_provider = decode(registration_parts[2]).unwrap();
+    // Reassemble each part from a byte array into a str
+    let hash = str::from_utf8(&decoded_hash).unwrap();
+    let a_record = str::from_utf8(&decoded_a_record).unwrap();
+    let provider = str::from_utf8(&decoded_provider).unwrap();
+
+    // TODO: Add error handling here
+    db_access::add_client(&db_connection, &hash, &a_record, &provider);
+
+    RequestStatus::New
+}
+
 pub fn parse_hello (db_connection: &Connection, client_auth: String, client_IP: String) -> RequestStatus {
     // The password hash arrives as a base64 encoded string.
     // Decode it and convert it back into a String.
