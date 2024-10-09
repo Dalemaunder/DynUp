@@ -99,6 +99,8 @@ fn main () -> Result<(), ureq::Error> {
 
     // Form the socket using the paramaters from the config file
     // First assignment is for the registration packet.
+    // NOTE: Swap the socket to pass all 3 parameters encoded together? Reduces number of hashing
+    // processes required.
     let mut socket = format!("http://{}:{}/{}/{}/{}", settings.server.address, settings.server.port, encoded_hash, encoded_a_record, encoded_provider);
 
     // Send out the register packet and action the response.
@@ -120,7 +122,7 @@ fn main () -> Result<(), ureq::Error> {
 
     // Core loop that sends a new packet in increments specified in the config file.
     loop {
-        // Fire off a head request
+        // Fire off a patch request
         let hello: Response = ureq::patch(&socket)
             .call()?;
             //.into_string()?;

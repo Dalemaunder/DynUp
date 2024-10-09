@@ -1,3 +1,4 @@
+#![warn(deprecated)]
 use std::time::{SystemTime, UNIX_EPOCH};
 use regex::Regex;
 use base64::decode;

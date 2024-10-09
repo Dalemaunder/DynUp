@@ -14,7 +14,7 @@ use serde_derive::Deserialize;
 mod db_access;
 mod dns_bindings;
 mod http_server;
-//use dns_bindings::ProviderType;
+use dns_bindings::ProviderType;
 use http_server::RequestStatus;
 
 
@@ -77,6 +77,15 @@ fn read_config() -> Settings {
 
 
 fn main() {
+
+    // Syntax
+    let mut provider_test = ProviderType::BIND;
+    provider_test.update("test","test");
+    println!("{}", provider_test);
+    provider_test = ProviderType::CloudFlare;
+    provider_test.update("test","test");
+    println!("{}", provider_test);
+
     // TODO: Add error handling here.
     let settings = read_config();
 
@@ -96,9 +105,9 @@ fn main() {
         //(request_components, socket_components) = http_server::parse_connection(&stream);
         let (request_method, request_URI, client_IP) = http_server::parse_connection(&stream);
 
-        println!("Method: {}", &request_method);
-        println!("Method: {}", &request_URI);
-        println!("Method: {}", &client_IP);
+        println!("main\tMethod: {}", &request_method);
+        println!("main\tRequest URI: {}", &request_URI);
+        println!("main\tClient IP: {}", &client_IP);
         // Match the method type from the connection.
         match request_method.as_str() {
             "PATCH" => {

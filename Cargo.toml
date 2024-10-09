@@ -20,11 +20,11 @@ ureq = "2.9"
 
 [[bin]]
 name = "server"
-#path = "src/bin/server.rs"
+path = "src/server/server.rs"
 
 [[bin]]
 name = "client"
-#path = "src/bin/client.rs"
+path = "src/client/client.rs"
 
 #[lib]
 #name = "db_access"

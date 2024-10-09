@@ -1,6 +1,6 @@
 use sqlite::Connection;
 
-pub fn establish_db_connection() {
+pub fn _establish_db_connection() {
     
 }
 pub fn instantiate_db(db_connection: &Connection) {
@@ -30,19 +30,21 @@ pub fn instantiate_db(db_connection: &Connection) {
 
     db_connection.execute(table_query).unwrap();
     //db_connection.execute(client_query).unwrap();
-    println!("DB queries have been run.");
+    println!("instantiate_db\tDB queries have been run.");
 }
 
 
 pub fn validate_client(db_connection: &Connection, hash: &str) -> bool {
-    //let query = format!("SELECT 1 FROM client WHERE hash = '{}';", &hash);
-    let query = format!("SELECT * FROM client;");
+    let query = format!("SELECT 1 FROM client WHERE hash = '{}';", &hash);
+    //let query = format!("SELECT * FROM client;");
+    let mut result: bool = false;
     db_connection.iterate(query, |pairs| {
-        println!("Iterator entered");
-        for &(name, value) in pairs.iter() {
-            println!("{} = {}", name, value.unwrap());
+        //println!("validate_client\tIterator entered");
+        for &(_name, _value) in pairs.iter() {
+            //println!("validate_client\t{} = {}", name, value.unwrap());
+            result = true;
         }
-        true
+        true        
     })
     .unwrap();
     //println!("DB Result: {:#?}", result);
@@ -53,13 +55,13 @@ pub fn validate_client(db_connection: &Connection, hash: &str) -> bool {
     //    },
     //    _ => false
     //}
-    true
+    result
 }
-pub fn validate_exists(_db_connection: &Connection, _hash: &str, client_IP: &str) -> bool {true}
+pub fn validate_exists(_db_connection: &Connection, _hash: &str, _client_IP: &str) -> bool {true}
 pub fn validate_current(_db_connection: &Connection, hash: &str, client_IP: &str, current_time: &str) -> bool {
-    println!("Hash: {}", hash); 
-    println!("Client IP: {}", client_IP); 
-    println!("Current time (UNIX): {}", current_time); 
+    println!("validate_current\tHash: {}", hash); 
+    println!("validate_current\tClient IP: {}", client_IP); 
+    println!("validate_current\tCurrent time (UNIX): {}", current_time); 
     false
 }
 
@@ -67,8 +69,8 @@ pub fn add_client(db_connection: &Connection, hash: &str, a_record: &str, dns_pr
     let add_client_query = format!("INSERT INTO client VALUES ('{}', '{}', '{}');", &hash, &a_record, &dns_provider);
     db_connection.execute(add_client_query).unwrap();
 }
-pub fn remove_client(_db_connection: &Connection, hash: &str) {}
+pub fn _remove_client(_db_connection: &Connection, _hash: &str) {}
 
-pub fn add_record() {}
-pub fn update_record() {}
-pub fn remove_record(_db_connection: &Connection, hash: &str) {}
+pub fn _add_record() {}
+pub fn _update_record() {}
+pub fn _remove_record(_db_connection: &Connection, _hash: &str) {}
